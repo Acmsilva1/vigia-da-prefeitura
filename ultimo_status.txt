@@ -1,22 +1,4 @@
-{
-  "mode": "latest_only",
-  "version": 2,
-  "source": "https://diariooficial.vilavelha.es.gov.br/",
-  "edition": "Diario Oficial do dia 09-06-2026 - Edicao n 2414",
-  "signature": "[{\"has_agente\": false, \"has_concurso\": true, \"has_processo\": false, \"pages\": [13], \"title\": \"Diario Oficial do dia 09-06-2026 - Edicao n 2414\"}]",
-  "matches": [
-    {
-      "title": "Diario Oficial do dia 09-06-2026 - Edicao n 2414",
-      "pages": [
-        13
-      ],
-      "snippets": [
-        "p13: normativos sobre as consequencias juridicas da pichacao, direitos e deveres dos cidadaos e formas de preservacao do espaco urbano; iv - realizacao de debates, oficinas, seminarios, concursos e atividades culturais que estimulem o dialogo sobre arte, juventude, cidadania e cuidado com a cidade; v - incentivo a criacao de murais, paineis e espacos destinados a arte urb"
-      ],
-      "has_agente": false,
-      "has_concurso": true,
-      "has_processo": false
-    }
-  ],
-  "updated_at": "2026-06-09T21:42:10"
-}
+.env
+__pycache__/
+*.pyc
+atividades.log

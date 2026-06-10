@@ -3,6 +3,7 @@ import io
 import json
 import os
 import re
+import time
 import unicodedata
 from datetime import datetime
 
@@ -18,8 +19,11 @@ requests.packages.urllib3.disable_warnings()
 
 URL_DIARIO = "https://diariooficial.vilavelha.es.gov.br/"
 TARGET_PHRASES = ("agente de farmacia", "concurso", "processo seletivo")
-STATE_VERSION = 2
+STATE_VERSION = 3
 MONITOR_MODE = "latest_only"
+REQUEST_TIMEOUT_SECONDS = 60
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 8
 
 PATH_VIGIA = r"C:\vigia"
 FILE_STATE = os.path.join(PATH_VIGIA, "ultimo_status.txt")
@@ -51,13 +55,23 @@ def resumir_texto(texto, termo, janela=180):
     return texto[inicio:fim].strip()
 
 
-def extrair_target(href):
-    match = re.search(r"__doPostBack\('([^']+)'", href or "")
-    return match.group(1) if match else ""
+def executar_com_retentativas(sessao, metodo, url, **kwargs):
+    kwargs.setdefault("timeout", REQUEST_TIMEOUT_SECONDS)
+
+    for tentativa in range(1, MAX_RETRIES + 1):
+        try:
+            return sessao.request(metodo, url, **kwargs)
+        except requests.RequestException as erro:
+            if tentativa >= MAX_RETRIES:
+                raise
+            registrar_log(
+                f"Falha na tentativa {tentativa}/{MAX_RETRIES} ao acessar o Diario Oficial: {erro}. Retentando em {RETRY_DELAY_SECONDS}s..."
+            )
+            time.sleep(RETRY_DELAY_SECONDS)
 
 
 def obter_pagina_inicial(sessao):
-    resposta = sessao.get(URL_DIARIO, verify=False, timeout=30)
+    resposta = executar_com_retentativas(sessao, "GET", URL_DIARIO, verify=False)
     resposta.raise_for_status()
     return BeautifulSoup(resposta.text, "html.parser")
 
@@ -87,27 +101,11 @@ def obter_ultima_edicao(sessao):
         }
     )
 
-    resposta = sessao.post(URL_DIARIO, data=payload, verify=False, timeout=60)
+    resposta = executar_com_retentativas(sessao, "POST", URL_DIARIO, data=payload, verify=False)
     resposta.raise_for_status()
     if "application/pdf" not in resposta.headers.get("content-type", "").lower():
         return titulo, None
     return titulo, resposta.content
-
-
-def baixar_pdf(sessao, soup_resultado, pdf_target):
-    payload = obter_campos_ocultos(soup_resultado)
-    payload.update(
-        {
-            "__EVENTTARGET": pdf_target,
-            "__EVENTARGUMENT": "",
-        }
-    )
-
-    resposta = sessao.post(URL_DIARIO, data=payload, verify=False, timeout=60)
-    resposta.raise_for_status()
-    if "application/pdf" not in resposta.headers.get("content-type", "").lower():
-        return None
-    return resposta.content
 
 
 def extrair_marcacoes_pdf(pdf_bytes):

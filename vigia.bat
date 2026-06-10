@@ -6,8 +6,8 @@ cd /d C:\vigia
 cls
 echo ======================================================
 echo   VIGIANDO ULTIMO DIARIO OFICIAL
-necho   MODO: MONITOR LOCAL
-necho   FREQUENCIA: 30 MINUTOS
+echo   MODO: MONITOR LOCAL
+echo   FREQUENCIA: 30 MINUTOS
 echo   LOCAL: C:\vigia
 echo ======================================================
 
@@ -20,7 +20,7 @@ if not exist monitor.py (
 "C:\Users\andre.silva\AppData\Local\Microsoft\WindowsApps\python.exe" monitor.py
 
 echo.
-echo [%%time%%] Proxima verificacao em 30 minutos...
+echo [%time%] Proxima verificacao em 30 minutos...
 echo Pressione Ctrl+C para encerrar.
 
 timeout /t 1800 /nobreak
