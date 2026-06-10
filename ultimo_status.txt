@@ -1,4 +1,11 @@
-.env
-__pycache__/
-*.pyc
-atividades.log
+{
+  "mode": "latest_only",
+  "version": 3,
+  "source": "https://diariooficial.vilavelha.es.gov.br/",
+  "status": "error",
+  "edition": "Diario Oficial indisponivel",
+  "error": "Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.",
+  "signature": "{\"date\": \"2026-06-10\", \"message\": \"Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.\", \"status\": \"error\"}",
+  "matches": [],
+  "updated_at": "2026-06-10T12:53:45"
+}
