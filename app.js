@@ -83,6 +83,17 @@ async function loadText(path) {
 }
 
 function inferStateFromLog(logText, statusText) {
+  let status = null;
+  try {
+    status = JSON.parse(statusText);
+  } catch {
+    status = null;
+  }
+
+  if (status?.status === "error") {
+    return "alert";
+  }
+
   const haystack = `${logText}\n${statusText}`.toLowerCase();
   if (haystack.includes("indisponivel") || haystack.includes("erro critico")) {
     return "alert";
@@ -123,7 +134,7 @@ async function init() {
       state === "ok"
         ? keywordSummary(status)
         : state === "alert"
-          ? "Falha no acesso ao diário ou leitura interrompida."
+          ? status.error || "Falha no acesso ao diário ou leitura interrompida."
           : "Leitura concluída sem nova publicação relevante.";
     logOutput.textContent = buildLogPreview(logText);
     summaryLine.textContent = `Fonte: ${status.source || "não informada"} • Atualizado em ${formatDate(status.updated_at)}`;

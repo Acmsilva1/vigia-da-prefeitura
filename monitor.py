@@ -176,6 +176,29 @@ def salvar_estado(dados):
         json.dump(dados, arquivo, ensure_ascii=False, indent=2)
 
 
+def salvar_estado_erro(mensagem):
+    dados = {
+        "mode": MONITOR_MODE,
+        "version": STATE_VERSION,
+        "source": URL_DIARIO,
+        "status": "error",
+        "edition": "Diario Oficial indisponivel",
+        "error": mensagem,
+        "signature": json.dumps(
+            {
+                "status": "error",
+                "message": mensagem,
+                "date": datetime.now().date().isoformat(),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        "matches": [],
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    salvar_estado(dados)
+
+
 def montar_assinatura(matches):
     resumo = []
     for item in matches:
@@ -233,7 +256,9 @@ def monitorar():
         registrar_log("Acessando o ultimo Diario Oficial publico...")
         titulo_edicao, pdf_bytes = obter_ultima_edicao(sessao)
         if not pdf_bytes:
-            registrar_log("Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.")
+            mensagem = "Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado."
+            registrar_log(mensagem)
+            salvar_estado_erro(mensagem)
             return
 
         registrar_log(f"Ultima edicao carregada: {titulo_edicao}")
@@ -295,7 +320,9 @@ def monitorar():
         salvar_estado(novo_estado)
 
     except Exception as erro:
-        registrar_log(f"Resultado: [Erro Critico] - {erro}")
+        mensagem = f"Resultado: [Erro Critico] - {erro}"
+        registrar_log(mensagem)
+        salvar_estado_erro(mensagem)
 
 
 if __name__ == "__main__":
