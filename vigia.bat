@@ -1,27 +1,28 @@
 @echo off
 title Vigia Vila Velha - Andre
-cd /d C:\vigia
+setlocal
+cd /d "%~dp0"
 
 :loop
 cls
 echo ======================================================
 echo   VIGIANDO ULTIMO DIARIO OFICIAL
 echo   MODO: MONITOR LOCAL
-echo   FREQUENCIA: 30 MINUTOS
-echo   LOCAL: C:\vigia
+echo   FREQUENCIA: 6 HORAS
+echo   LOCAL: %cd%
 echo ======================================================
 
 if not exist monitor.py (
-    echo [X] ERRO: monitor.py nao encontrado em C:\vigia
+    echo [X] ERRO: monitor.py nao encontrado neste diretorio
     pause
     exit
 )
 
-"C:\Users\andre.silva\AppData\Local\Microsoft\WindowsApps\python.exe" monitor.py
+python -B monitor.py
 
 echo.
-echo [%time%] Proxima verificacao em 30 minutos...
+echo [%time%] Proxima verificacao em 6 horas...
 echo Pressione Ctrl+C para encerrar.
 
-timeout /t 1800 /nobreak
+timeout /t 21600 /nobreak
 goto loop

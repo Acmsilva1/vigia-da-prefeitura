@@ -2,10 +2,30 @@
   "mode": "latest_only",
   "version": 3,
   "source": "https://diariooficial.vilavelha.es.gov.br/",
-  "status": "error",
-  "edition": "Diario Oficial indisponivel",
-  "error": "Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.",
-  "signature": "{\"date\": \"2026-06-10\", \"message\": \"Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.\", \"status\": \"error\"}",
-  "matches": [],
-  "updated_at": "2026-06-10T12:53:45"
+  "edition": "Diário Oficial do dia 10-06-2026 - Edição nº 2415",
+  "signature": "[{\"has_agente\": false, \"has_concurso\": true, \"has_processo\": true, \"pages\": [11, 12, 13, 14, 15, 16, 17, 20], \"title\": \"Diário Oficial do dia 10-06-2026 - Edição nº 2415\"}]",
+  "matches": [
+    {
+      "title": "Diário Oficial do dia 10-06-2026 - Edição nº 2415",
+      "pages": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        20
+      ],
+      "snippets": [
+        "p11: arencia.vilavelha.es.gov.br/licitacao.lista.aspx?m unicipioid=1&exercicio=2026. vila velha/es, 06 de junho de 2026. ariane pereira nicoli agente de contratacao/pregoeira municipal processo seletivo simplificado de instrutor da escola civico -militar edital 07/2026 processo nº 32739/2026 estabelece normas para recrutamento, selecao e contratacao temporaria de profissionais mi",
+        "p12: esultado final publicado no site do municipio de vila velha. 1.4 e de responsabilidade do candidato acompanhar constantemente as publicacoes oficiais e os prazos referentes a este processo seletivo, desde o edital de abertura ate a convocacao. 1.5 o processo seletivo simplificado de que trata este edital sera composto pelas seguintes etapas: inscricao; autuacao de processo e",
+        "p13: deste edital com igualdade de condicoes com os demais candidatos. 4.3 serao reservadas 10% (dez por cento) das vagas existentes ou das que vierem a surgir no prazo de validade do processo seletivo, desde que a funcao pretendida seja compativel com a deficiencia que possuem, conforme estabelece o decreto federal nº 9.508/2018, de 24 de setembro de 2018. 4.4 antes de efetuar"
+      ],
+      "has_agente": false,
+      "has_concurso": true,
+      "has_processo": true
+    }
+  ],
+  "updated_at": "2026-06-10T10:45:23"
 }

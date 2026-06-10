@@ -27,15 +27,28 @@ RETRY_DELAY_SECONDS = 8
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILE_STATE = os.path.join(BASE_DIR, "ultimo_status.txt")
-FILE_LOG = os.path.join(BASE_DIR, "registro")
+FILE_LOG = os.path.join(BASE_DIR, "registro.txt")
 
 
-def registrar_log(mensagem):
+def registrar_console(mensagem):
     timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    print(f"[{timestamp}] {mensagem}")
+
+
+def registrar_resumo(resultado, edicao, paginas=None, detalhe=None):
+    timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    linha = f"[{timestamp}] {resultado.upper()}"
+    if edicao:
+        linha += f" | {edicao}"
+    if paginas:
+        paginas_txt = ", ".join(str(p) for p in paginas)
+        linha += f" | paginas: {paginas_txt}"
+    if detalhe:
+        linha += f" | {detalhe}"
     os.makedirs(BASE_DIR, exist_ok=True)
     with open(FILE_LOG, "a", encoding="utf-8") as arquivo:
-        arquivo.write(f"[{timestamp}] {mensagem}\n")
-    print(f"[{timestamp}] {mensagem}")
+        arquivo.write(f"{linha}\n")
+    print(linha)
 
 
 def normalizar_texto(texto):
@@ -65,7 +78,7 @@ def executar_com_retentativas(sessao, metodo, url, **kwargs):
         except requests.RequestException as erro:
             if tentativa >= MAX_RETRIES:
                 raise
-            registrar_log(
+            registrar_console(
                 f"Falha na tentativa {tentativa}/{MAX_RETRIES} ao acessar o Diario Oficial: {erro}. Retentando em {RETRY_DELAY_SECONDS}s..."
             )
             time.sleep(RETRY_DELAY_SECONDS)
@@ -77,7 +90,7 @@ def obter_pagina_inicial(sessao):
         resposta.raise_for_status()
         return BeautifulSoup(resposta.text, "html.parser")
     except requests.RequestException as erro:
-        registrar_log(f"Diario Oficial indisponivel no momento: {erro}")
+        registrar_console(f"Diario Oficial indisponivel no momento: {erro}")
         return None
 
 
@@ -116,7 +129,7 @@ def obter_ultima_edicao(sessao):
             return titulo, None
         return titulo, resposta.content
     except requests.RequestException as erro:
-        registrar_log(f"Falha ao baixar a ultima edicao: {erro}")
+        registrar_console(f"Falha ao baixar a ultima edicao: {erro}")
         return titulo, None
 
 
@@ -235,7 +248,7 @@ def enviar_telegram(msg):
     try:
         requests.post(url, data={"chat_id": chat_id, "text": msg}, timeout=15)
     except Exception as erro:
-        registrar_log(f"Erro ao ligar ao Telegram: {erro}")
+        registrar_console(f"Erro ao ligar ao Telegram: {erro}")
 
 
 def monitorar():
@@ -254,15 +267,13 @@ def monitorar():
     )
 
     try:
-        registrar_log("Acessando o ultimo Diario Oficial publico...")
         titulo_edicao, pdf_bytes = obter_ultima_edicao(sessao)
         if not pdf_bytes:
-            mensagem = "Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado."
-            registrar_log(mensagem)
+            mensagem = "Diario indisponivel ou PDF nao retornado."
+            registrar_resumo("indisponivel", None, detalhe=mensagem)
             salvar_estado_erro(mensagem)
             return
 
-        registrar_log(f"Ultima edicao carregada: {titulo_edicao}")
         marcacoes = extrair_marcacoes_pdf(pdf_bytes)
         match = {
             "title": titulo_edicao,
@@ -273,15 +284,6 @@ def monitorar():
             "has_processo": marcacoes["has_processo"],
         }
         matches = [match]
-
-        resumo_kw = (
-            f"agente de farmacia={'sim' if marcacoes['has_agente'] else 'nao'}, "
-            f"concurso={'sim' if marcacoes['has_concurso'] else 'nao'}, "
-            f"processo seletivo={'sim' if marcacoes['has_processo'] else 'nao'}"
-        )
-        registrar_log(f"Resumo da ultima edicao: {resumo_kw}")
-        if marcacoes["snippets"]:
-            registrar_log(f"Trecho encontrado: {marcacoes['snippets'][0][:240]}")
 
         novo_estado = {
             "mode": MONITOR_MODE,
@@ -303,26 +305,30 @@ def monitorar():
 
         if not estado_valido:
             salvar_estado(novo_estado)
-            registrar_log("Estado inicial gravado para o ultimo diario.")
+            estado = "novidade" if marcacoes["has_agente"] or marcacoes["has_concurso"] or marcacoes["has_processo"] else "sem_novidade"
+            detalhe = marcacoes["snippets"][0][:240] if marcacoes["snippets"] else None
+            registrar_resumo(estado, titulo_edicao, marcacoes["pages"], detalhe)
             return
 
         assinatura_anterior = estado_anterior.get("signature", "")
         assinatura_nova = novo_estado["signature"]
 
         if assinatura_nova != assinatura_anterior and matches:
-            registrar_log("Nova publicacao relevante detectada no ultimo diario.")
             aviso = formatar_alerta(matches)
             enviar_telegram(aviso)
             if os.name == "nt":
                 ctypes.windll.user32.MessageBoxW(0, aviso, "Vila Velha - Nova publicacao", 0x40 | 0x1000)
+            detalhe = marcacoes["snippets"][0][:240] if marcacoes["snippets"] else None
+            registrar_resumo("novidade", titulo_edicao, marcacoes["pages"], detalhe)
         else:
-            registrar_log("Nenhuma novidade relevante encontrada no ultimo diario.")
+            detalhe = "agente=nao, concurso=nao, processo=nao"
+            registrar_resumo("sem_novidade", titulo_edicao, marcacoes["pages"], detalhe)
 
         salvar_estado(novo_estado)
 
     except Exception as erro:
         mensagem = f"Resultado: [Erro Critico] - {erro}"
-        registrar_log(mensagem)
+        registrar_resumo("erro", None, detalhe=mensagem)
         salvar_estado_erro(mensagem)
 
 
