@@ -19,19 +19,20 @@ requests.packages.urllib3.disable_warnings()
 
 URL_DIARIO = "https://diariooficial.vilavelha.es.gov.br/"
 TARGET_PHRASES = ("agente de farmacia", "concurso", "processo seletivo")
-STATE_VERSION = 3
+STATE_VERSION = 2
 MONITOR_MODE = "latest_only"
 REQUEST_TIMEOUT_SECONDS = 60
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 8
 
-PATH_VIGIA = r"C:\vigia"
-FILE_STATE = os.path.join(PATH_VIGIA, "ultimo_status.txt")
-FILE_LOG = os.path.join(PATH_VIGIA, "registro")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_STATE = os.path.join(BASE_DIR, "ultimo_status.txt")
+FILE_LOG = os.path.join(BASE_DIR, "registro")
 
 
 def registrar_log(mensagem):
     timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    os.makedirs(BASE_DIR, exist_ok=True)
     with open(FILE_LOG, "a", encoding="utf-8") as arquivo:
         arquivo.write(f"[{timestamp}] {mensagem}\n")
     print(f"[{timestamp}] {mensagem}")
@@ -204,8 +205,7 @@ def enviar_telegram(msg):
 
 
 def monitorar():
-    if not os.path.exists(PATH_VIGIA):
-        os.makedirs(PATH_VIGIA)
+    os.makedirs(BASE_DIR, exist_ok=True)
 
     sessao = requests.Session()
     sessao.headers.update(
@@ -275,7 +275,8 @@ def monitorar():
             registrar_log("Nova publicacao relevante detectada no ultimo diario.")
             aviso = formatar_alerta(matches)
             enviar_telegram(aviso)
-            ctypes.windll.user32.MessageBoxW(0, aviso, "Vila Velha - Nova publicacao", 0x40 | 0x1000)
+            if os.name == "nt":
+                ctypes.windll.user32.MessageBoxW(0, aviso, "Vila Velha - Nova publicacao", 0x40 | 0x1000)
         else:
             registrar_log("Nenhuma novidade relevante encontrada no ultimo diario.")
 
