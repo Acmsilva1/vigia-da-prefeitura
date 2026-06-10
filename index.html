@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Vigia - Diário Oficial de Vila Velha</title>
+    <meta
+      name="description"
+      content="Painel discreto de acompanhamento do Diário Oficial de Vila Velha, com horário da última execução, status e log."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <div class="topline">
+          <span class="eyebrow">Vigia</span>
+          <span id="status-pill" class="pill pill-waiting">carregando</span>
+        </div>
+
+        <h1>Monitor do Diário Oficial</h1>
+        <p class="lead">
+          Painel simples para mostrar a última execução, o resultado encontrado e o log mais recente.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <span class="label">Horário da última execução</span>
+            <strong id="run-time">--</strong>
+            <span id="edition" class="muted">Aguardando dados.</span>
+          </article>
+
+          <article class="card">
+            <span class="label">Resultado</span>
+            <strong id="result-title">Sistema indisponível</strong>
+            <span id="result-detail" class="muted">Sem leitura recente do diário.</span>
+          </article>
+        </div>
+
+        <section class="log-block">
+          <div class="section-head">
+            <span class="label">Log</span>
+            <span class="section-note">Últimas linhas do arquivo `registro`</span>
+          </div>
+          <pre id="log-output" class="log">Carregando log...</pre>
+        </section>
+
+        <section class="footer-note">
+          <span id="summary-line">Aguardando atualização.</span>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
