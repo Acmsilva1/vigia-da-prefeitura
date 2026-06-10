@@ -19,7 +19,7 @@ requests.packages.urllib3.disable_warnings()
 
 URL_DIARIO = "https://diariooficial.vilavelha.es.gov.br/"
 TARGET_PHRASES = ("agente de farmacia", "concurso", "processo seletivo")
-STATE_VERSION = 2
+STATE_VERSION = 3
 MONITOR_MODE = "latest_only"
 REQUEST_TIMEOUT_SECONDS = 60
 MAX_RETRIES = 3
@@ -72,9 +72,13 @@ def executar_com_retentativas(sessao, metodo, url, **kwargs):
 
 
 def obter_pagina_inicial(sessao):
-    resposta = executar_com_retentativas(sessao, "GET", URL_DIARIO, verify=False)
-    resposta.raise_for_status()
-    return BeautifulSoup(resposta.text, "html.parser")
+    try:
+        resposta = executar_com_retentativas(sessao, "GET", URL_DIARIO, verify=False)
+        resposta.raise_for_status()
+        return BeautifulSoup(resposta.text, "html.parser")
+    except requests.RequestException as erro:
+        registrar_log(f"Diario Oficial indisponivel no momento: {erro}")
+        return None
 
 
 def obter_campos_ocultos(soup):
@@ -87,6 +91,9 @@ def obter_campos_ocultos(soup):
 
 def obter_ultima_edicao(sessao):
     soup = obter_pagina_inicial(sessao)
+    if soup is None:
+        return None, None
+
     titulo = ""
     card = soup.select_one("#ctl00_cpConteudo_gvDocumentos [id$='lblNomeArquivo']")
     if card:
@@ -102,11 +109,15 @@ def obter_ultima_edicao(sessao):
         }
     )
 
-    resposta = executar_com_retentativas(sessao, "POST", URL_DIARIO, data=payload, verify=False)
-    resposta.raise_for_status()
-    if "application/pdf" not in resposta.headers.get("content-type", "").lower():
+    try:
+        resposta = executar_com_retentativas(sessao, "POST", URL_DIARIO, data=payload, verify=False)
+        resposta.raise_for_status()
+        if "application/pdf" not in resposta.headers.get("content-type", "").lower():
+            return titulo, None
+        return titulo, resposta.content
+    except requests.RequestException as erro:
+        registrar_log(f"Falha ao baixar a ultima edicao: {erro}")
         return titulo, None
-    return titulo, resposta.content
 
 
 def extrair_marcacoes_pdf(pdf_bytes):
@@ -222,7 +233,8 @@ def monitorar():
         registrar_log("Acessando o ultimo Diario Oficial publico...")
         titulo_edicao, pdf_bytes = obter_ultima_edicao(sessao)
         if not pdf_bytes:
-            raise RuntimeError("Nao foi possivel baixar o PDF da ultima edicao.")
+            registrar_log("Monitor encerrado sem nova leitura: diario indisponivel ou PDF nao retornado.")
+            return
 
         registrar_log(f"Ultima edicao carregada: {titulo_edicao}")
         marcacoes = extrair_marcacoes_pdf(pdf_bytes)
