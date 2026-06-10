@@ -242,6 +242,7 @@ def monitorar():
     os.makedirs(BASE_DIR, exist_ok=True)
 
     sessao = requests.Session()
+    sessao.trust_env = False
     sessao.headers.update(
         {
             "User-Agent": (
